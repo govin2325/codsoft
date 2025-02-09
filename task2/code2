@@ -1,0 +1,205 @@
+import tkinter as tk
+from tkinter import messagebox
+import json
+import os
+
+# File to store the contacts
+CONTACTS_FILE = "contacts.json"
+
+# Function to load contacts from file
+def load_contacts():
+    if os.path.exists(CONTACTS_FILE):
+        with open(CONTACTS_FILE, "r") as f:
+            return json.load(f)
+    else:
+        return {}
+
+# Function to save contacts to file
+def save_contacts(contacts):
+    with open(CONTACTS_FILE, "w") as f:
+        json.dump(contacts, f)
+
+# Add Contact function
+def add_contact():
+    first_name = first_name_entry.get().strip()
+    last_name = last_name_entry.get().strip()  # Now optional
+    phone_number = phone_number_entry.get().strip()
+    email = email_entry.get().strip()
+
+    if not first_name or not phone_number:
+        messagebox.showwarning("Input Error", "First Name and Phone Number are required.")
+        return
+
+    contact = {
+        "first_name": first_name,
+        "last_name": last_name if last_name else "",  # Allow last name to be empty
+        "phone_number": phone_number,
+        "email": email
+    }
+
+    contacts = load_contacts()
+    contact_id = phone_number  # Use phone number as unique ID for simplicity
+    if contact_id in contacts:
+        messagebox.showwarning("Duplicate Contact", "This contact already exists.")
+        return
+
+    contacts[contact_id] = contact
+    save_contacts(contacts)
+    messagebox.showinfo("Contact Added", "Contact has been added successfully.")
+    clear_input_fields()
+    view_contacts()
+
+# Clear input fields
+def clear_input_fields():
+    first_name_entry.delete(0, tk.END)
+    last_name_entry.delete(0, tk.END)
+    phone_number_entry.delete(0, tk.END)
+    email_entry.delete(0, tk.END)
+
+# View Contacts function
+def view_contacts():
+    contacts = load_contacts()
+    contact_listbox.delete(0, tk.END)  # Clear existing list
+
+    for contact_id, contact in contacts.items():
+        display_text = f"{contact['first_name']} {contact['last_name']} - {contact['phone_number']}"
+        contact_listbox.insert(tk.END, display_text)
+
+# Search Contact function
+def search_contact():
+    query = search_entry.get().strip().lower()
+    if not query:
+        messagebox.showwarning("Input Error", "Please enter a name or phone number to search.")
+        return
+
+    contacts = load_contacts()
+    contact_listbox.delete(0, tk.END)
+
+    found = False
+    for contact_id, contact in contacts.items():
+        display_text = f"{contact['first_name']} {contact['last_name']} - {contact['phone_number']}"
+        if query in contact['first_name'].lower() or query in contact['last_name'].lower() or query in contact['phone_number']:
+            contact_listbox.insert(tk.END, display_text)
+            found = True
+
+    if not found:
+        messagebox.showinfo("No Results", "No contacts found.")
+
+# Update Contact function
+def update_contact():
+    selected_contact = contact_listbox.curselection()
+    if not selected_contact:
+        messagebox.showwarning("No Contact Selected", "Please select a contact to update.")
+        return
+
+    contact_index = selected_contact[0]
+    contact_text = contact_listbox.get(contact_index)
+    phone_number = contact_text.split(" - ")[1].strip()
+
+    contacts = load_contacts()
+    contact = contacts[phone_number]
+
+    first_name_entry.delete(0, tk.END)
+    last_name_entry.delete(0, tk.END)
+    phone_number_entry.delete(0, tk.END)
+    email_entry.delete(0, tk.END)
+
+    first_name_entry.insert(0, contact['first_name'])
+    last_name_entry.insert(0, contact['last_name'])
+    phone_number_entry.insert(0, contact['phone_number'])
+    email_entry.insert(0, contact['email'])
+
+    def save_updated_contact():
+        updated_first_name = first_name_entry.get().strip()
+        updated_last_name = last_name_entry.get().strip()  # Last name is now optional
+        updated_phone_number = phone_number_entry.get().strip()
+        updated_email = email_entry.get().strip()
+
+        if not updated_first_name or not updated_phone_number:
+            messagebox.showwarning("Input Error", "First Name and Phone Number are required.")
+            return
+
+        updated_contact = {
+            "first_name": updated_first_name,
+            "last_name": updated_last_name if updated_last_name else "",  # Last name can be empty
+            "phone_number": updated_phone_number,
+            "email": updated_email
+        }
+
+        contacts[phone_number] = updated_contact
+        save_contacts(contacts)
+        messagebox.showinfo("Contact Updated", "Contact has been updated successfully.")
+        clear_input_fields()
+        view_contacts()
+
+    update_button.config(state=tk.NORMAL, command=save_updated_contact)
+
+# Delete Contact function
+def delete_contact():
+    selected_contact = contact_listbox.curselection()
+    if not selected_contact:
+        messagebox.showwarning("No Contact Selected", "Please select a contact to delete.")
+        return
+
+    contact_index = selected_contact[0]
+    contact_text = contact_listbox.get(contact_index)
+    phone_number = contact_text.split(" - ")[1].strip()
+
+    contacts = load_contacts()
+    if phone_number in contacts:
+        del contacts[phone_number]
+        save_contacts(contacts)
+        messagebox.showinfo("Contact Deleted", "Contact has been deleted successfully.")
+        view_contacts()
+
+# UI setup
+root = tk.Tk()
+root.title("Contact Management System")
+root.configure(bg="#f0f8ff")
+
+# Labels and entry widgets with colors
+tk.Label(root, text="First Name:", bg="#f0f8ff", font=("Arial", 12)).grid(row=0, column=0, padx=10, pady=5)
+first_name_entry = tk.Entry(root, width=30, font=("Arial", 12))
+first_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+tk.Label(root, text="Last Name (Optional):", bg="#f0f8ff", font=("Arial", 12)).grid(row=1, column=0, padx=10, pady=5)
+last_name_entry = tk.Entry(root, width=30, font=("Arial", 12))
+last_name_entry.grid(row=1, column=1, padx=10, pady=5)
+
+tk.Label(root, text="Phone Number:", bg="#f0f8ff", font=("Arial", 12)).grid(row=2, column=0, padx=10, pady=5)
+phone_number_entry = tk.Entry(root, width=30, font=("Arial", 12))
+phone_number_entry.grid(row=2, column=1, padx=10, pady=5)
+
+tk.Label(root, text="Email (Optional):", bg="#f0f8ff", font=("Arial", 12)).grid(row=3, column=0, padx=10, pady=5)
+email_entry = tk.Entry(root, width=30, font=("Arial", 12))
+email_entry.grid(row=3, column=1, padx=10, pady=5)
+
+# Buttons with improved colors
+add_button = tk.Button(root, text="Add Contact", bg="#4CAF50", fg="white", font=("Arial", 12), command=add_contact)
+add_button.grid(row=4, column=0, columnspan=2, pady=10)
+
+search_label = tk.Label(root, text="Search (Name/Phone):", bg="#f0f8ff", font=("Arial", 12))
+search_label.grid(row=5, column=0, padx=10, pady=5)
+
+search_entry = tk.Entry(root, width=30, font=("Arial", 12))
+search_entry.grid(row=5, column=1, padx=10, pady=5)
+
+search_button = tk.Button(root, text="Search", bg="#2196F3", fg="white", font=("Arial", 12), command=search_contact)
+search_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+# Contact Listbox with scrollbar
+contact_listbox = tk.Listbox(root, width=50, height=10, font=("Arial", 12), bg="#e6f7ff")
+contact_listbox.grid(row=7, column=0, columnspan=2, padx=10, pady=10)
+
+# Buttons for update and delete with color
+update_button = tk.Button(root, text="Update Contact", bg="#FFEB3B", fg="black", font=("Arial", 12), state=tk.DISABLED, command=update_contact)  # Light yellow
+update_button.grid(row=8, column=0, padx=10, pady=10)
+
+delete_button = tk.Button(root, text="Delete Contact", bg="#F44336", fg="white", font=("Arial", 12), command=delete_contact)
+delete_button.grid(row=8, column=1, padx=10, pady=10)
+
+# View all contacts initially
+view_contacts()
+
+# Run the main application loop
+root.mainloop()
