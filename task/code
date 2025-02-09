@@ -1,0 +1,76 @@
+import tkinter as tk
+from tkinter import messagebox
+
+# Function to perform the calculation
+def calculate():
+    try:
+        # Get the expression from the entry field
+        expression = entry.get()
+
+        # Use eval to evaluate the mathematical expression
+        # Note: 'eval' is used here to simplify the code, but in real applications, be careful with it as it can execute arbitrary code
+        result = eval(expression)
+
+        # Update the result label with the calculated result
+        result_label.config(text=f"Result: {result}")
+
+    except Exception as e:
+        # If there's an error (e.g., invalid input), show an error message
+        messagebox.showerror("Error", f"Invalid Input: {e}")
+
+# Set up the main window
+root = tk.Tk()
+root.title("Simple Calculator")
+root.geometry("500x500")
+root.configure(bg="black")
+
+# Title label
+title_label = tk.Label(root, text="Simple Calculator", font=("LCD", 16), bg="black", fg="white")
+title_label.pack(pady=10)
+
+# Entry widget for input expression
+tk.Label(root, text="Enter calculation:", bg="black", fg="white", font=("LCD", 12)).pack(pady=5)
+entry = tk.Entry(root, font=("LCD", 14), width=30, bg="olive", fg="white", borderwidth=2)
+entry.pack(pady=5)
+
+# Function to insert digits and operators into the entry box
+def insert_value(value):
+    current_text = entry.get()
+    entry.delete(0, tk.END)
+    entry.insert(tk.END, current_text + value)
+
+# Function to clear the entry box
+def clear():
+    entry.delete(0, tk.END)
+
+# Button layout
+button_frame = tk.Frame(root, bg="black")
+button_frame.pack(pady=10)
+
+# Digits and operators available for input
+buttons = [
+    ('7', 0, 0), ('8', 0, 1), ('9', 0, 2), ('+', 0, 3),
+    ('4', 1, 0), ('5', 1, 1), ('6', 1, 2), ('-', 1, 3),
+    ('1', 2, 0), ('2', 2, 1), ('3', 2, 2), ('*', 2, 3),
+    ('0', 3, 1), ('.', 3, 2), ('/', 3, 3),
+    ('(', 4, 0), (')', 4, 1), ('C', 4, 2, clear), ('=', 4, 3)
+]
+
+# Creating and placing buttons in the grid
+for text, row, col, *command in buttons:
+    # Check if a custom command (like 'clear' or '=') is provided
+    if text == 'C':
+        button = tk.Button(button_frame, text=text, font=("LCD", 14), bg="olive", fg="white", width=7, height=2, command=command[0])
+    elif text == '=':
+        button = tk.Button(button_frame, text=text, font=("LCD", 14), bg="olive", fg="white", width=7, height=2, command=calculate)
+    else:
+        button = tk.Button(button_frame, text=text, font=("LCD", 14), bg="olive", fg="white", width=7, height=2, 
+                           command=lambda text=text: insert_value(text))
+    button.grid(row=row, column=col, padx=5, pady=5)
+
+# Result label
+result_label = tk.Label(root, text="Result: ", font=("LCD", 16), bg="black", fg="white")
+result_label.pack(pady=20)
+
+# Run the main loop
+root.mainloop()
