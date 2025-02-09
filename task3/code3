@@ -1,0 +1,146 @@
+import random
+import tkinter as tk
+from tkinter import messagebox
+
+# --- Game Logic ---
+def get_symbol(choice):
+    symbols = {"rock": "✊", "paper": "✋", "scissors": "✌"}
+    return symbols[choice]
+
+def determine_winner(player_choice, computer_choice):
+    if player_choice == computer_choice:
+        return "tie"
+    elif (
+        (player_choice == "rock" and computer_choice == "scissors") or
+        (player_choice == "scissors" and computer_choice == "paper") or
+        (player_choice == "paper" and computer_choice == "rock")
+    ):
+        return "player"
+    else:
+        return "computer"
+
+def play_game(user_choice):
+    global user_score, computer_score, round_num, num_rounds
+
+    computer_choice = random.choice(["rock", "paper", "scissors"])
+    result = determine_winner(user_choice, computer_choice)
+
+    if result == "player":
+        user_score += 1
+        result_text = "You win this round!"
+    elif result == "computer":
+        computer_score += 1
+        result_text = "You lose this round!"
+    else:
+        result_text = "It's a tie!"
+
+    round_num += 1
+
+    # Update the result and score
+    result_label.config(text=f"Round {round_num}/{num_rounds}:\nYou chose: {get_symbol(user_choice)}\nComputer chose: {get_symbol(computer_choice)}\n{result_text}")
+    score_label.config(text=f"Scores: You - {user_score}, Computer - {computer_score}")
+
+    # End game if all rounds are finished
+    if round_num > num_rounds:
+        show_final_result()
+
+def show_final_result():
+    if user_score > computer_score:
+        final_result = "Congratulations! You won the game!"
+    elif user_score < computer_score:
+        final_result = "Sorry, you lost the game!"
+    else:
+        final_result = "It's a tie game!"
+    
+    messagebox.showinfo("Game Over", f"{final_result}\nFinal Scores:\nYou - {user_score}\nComputer - {computer_score}")
+    reset_game()
+
+def reset_game():
+    global user_score, computer_score, round_num, num_rounds
+    user_score = 0
+    computer_score = 0
+    round_num = 1
+    score_label.config(text="Scores: You - 0, Computer - 0")
+    result_label.config(text="")
+
+def start_game():
+    global num_rounds
+    try:
+        num_rounds = int(game_rounds_entry.get())
+        if num_rounds % 2 == 0:
+            messagebox.showerror("Invalid Input", "The number of rounds must be an odd number. Please try again.")
+        else:
+            start_button.config(state=tk.DISABLED)
+            game_rounds_entry.config(state=tk.DISABLED)
+            play_buttons_frame.pack()
+            instruction_label.config(text="Choose rock, paper, or scissors:")
+    except ValueError:
+        messagebox.showerror("Invalid Input", "Please enter a valid number.")
+
+def quit_game():
+    messagebox.showinfo("Final Scores", f"Final Scores:\nYou - {user_score}\nComputer - {computer_score}")
+    root.quit()
+
+# --- Set up the Game UI ---
+root = tk.Tk()
+root.title("Rock-Paper-Scissors")
+root.configure(bg="#2C3E50")  # Changed background color to a dark theme
+
+# Initialize game variables
+user_score = 0
+computer_score = 0
+round_num = 1
+num_rounds = 0
+
+# Welcome label
+welcome_label = tk.Label(root, text="Welcome to Rock-Paper-Scissors!", font=("Arial", 24, "bold"), bg="#34495E", fg="white")
+welcome_label.pack(pady=30)
+
+# Instruction label
+instruction_label = tk.Label(root, text="Select number of rounds (must be odd):", font=("Arial", 14), bg="#2C3E50", fg="white")
+instruction_label.pack(pady=5)
+
+# Entry box for number of rounds
+game_rounds_entry = tk.Entry(root, font=("Arial", 14), width=5)
+game_rounds_entry.pack(pady=10)
+
+# Start button
+start_button = tk.Button(root, text="Start Game", font=("Arial", 14), bg="#16A085", fg="white", command=start_game)
+start_button.pack(pady=10)
+
+# Play buttons (rock, paper, scissors) hidden until game starts
+play_buttons_frame = tk.Frame(root, bg="#2C3E50")
+
+play_buttons_style = {
+    "font": ("Arial", 14, "bold"),
+    "relief": "raised",
+    "bd": 2,
+    "width": 10,
+    "height": 2,
+    "borderwidth": 2
+}
+
+# Rock button
+rock_button = tk.Button(play_buttons_frame, text="✊ Rock", bg="#E74C3C", fg="white", command=lambda: play_game("rock"), **play_buttons_style)
+rock_button.grid(row=0, column=0, padx=10, pady=5)
+
+# Paper button
+paper_button = tk.Button(play_buttons_frame, text="✋ Paper", bg="#3498DB", fg="white", command=lambda: play_game("paper"), **play_buttons_style)
+paper_button.grid(row=0, column=1, padx=10, pady=5)
+
+# Scissors button
+scissors_button = tk.Button(play_buttons_frame, text="✌ Scissors", bg="#2ECC71", fg="white", command=lambda: play_game("scissors"), **play_buttons_style)
+scissors_button.grid(row=0, column=2, padx=10, pady=5)
+
+# Result and score labels
+result_label = tk.Label(root, text="", font=("Arial", 14), bg="#2C3E50", fg="white")
+result_label.pack(pady=10)
+
+score_label = tk.Label(root, text="Scores: You - 0, Computer - 0", font=("Arial", 14), bg="#2C3E50", fg="white")
+score_label.pack(pady=10)
+
+# Quit button
+quit_button = tk.Button(root, text="Quit", font=("Arial", 14), bg="#E74C3C", fg="white", command=quit_game)
+quit_button.pack(pady=10)
+
+root.mainloop()
